@@ -77,7 +77,42 @@ func (a *App) Export(path string, archiveName string) error {
 	return archiver.Archive([]string{path}, archiveName)
 }
 
-// Walk walks through a list of commands with a matching description
-func (a *App) Walk(description string) {
+func (a *App) getCmdListIndex(description string) int {
+	cmdListIndex := -1
 
+	for index, cmdList := range a.CmdList {
+		if cmdList.Description == description {
+			cmdListIndex = index
+			break
+		}
+	}
+	return cmdListIndex
+}
+
+// Run runs a cmdList with a matching description
+func (a *App) Run(description string) {
+
+	cmdListIndex := a.getCmdListIndex(description)
+
+	if cmdListIndex > -1 {
+		cmds := a.CmdList[cmdListIndex].Cmds
+
+		for index := range cmds {
+			cmds[index].Run()
+		}
+	}
+}
+
+// Print the commands
+func (a *App) Print(description string) {
+
+	cmdListIndex := a.getCmdListIndex(description)
+
+	if cmdListIndex > -1 {
+		cmds := &a.CmdList[cmdListIndex].Cmds
+
+		for _, cmd := range *cmds {
+			cmd.Print()
+		}
+	}
 }

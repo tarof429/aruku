@@ -23,7 +23,8 @@ func TestReadWrite(t *testing.T) {
 
 		for i := 0; i < 3; i++ {
 			cmd := Command{
-				Args:             []string{"a", "b", "c"},
+				Name:             "ls",
+				Args:             []string{"-l", "."},
 				Description:      "Simple command " + strconv.Itoa(i),
 				WorkingDirectory: "testdata",
 			}
@@ -67,6 +68,9 @@ func TestReadWrite(t *testing.T) {
 	if len(a.CmdList) != 3 {
 		t.Fatalf("Did not find 3 commands")
 	}
+
+	a.Run("Install")
+	a.Print("Install")
 
 }
 
