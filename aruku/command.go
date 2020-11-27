@@ -20,7 +20,7 @@ type Command struct {
 
 // Run runs the command
 func (c *Command) Run() {
-	fmt.Printf("Running %v\n", c.Description)
+
 	cmd := exec.Command(c.Name, c.Args...)
 	cmd.Dir = c.WorkingDirectory
 	combinedOutput, combinedOutputErr := cmd.CombinedOutput()
@@ -36,5 +36,5 @@ func (c *Command) Run() {
 
 // Print prints the command
 func (c *Command) Print() {
-	fmt.Print(c)
+	fmt.Println(c)
 }

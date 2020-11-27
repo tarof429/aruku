@@ -11,9 +11,11 @@ import (
 
 // App represents this application
 type App struct {
-	Author      string
-	Description string
-	CmdList     []CmdList
+	Author              string
+	Description         string
+	CmdList             []CmdList
+	currentCmdList      CmdList
+	currentCmdListIndex int
 }
 
 // CmdList is a list of commands
@@ -77,42 +79,41 @@ func (a *App) Export(path string, archiveName string) error {
 	return archiver.Archive([]string{path}, archiveName)
 }
 
-func (a *App) getCmdListIndex(description string) int {
-	cmdListIndex := -1
+// SetCmdList sets which CmdList we want to run based on the description.
+// If a list was found, return true, otherwise false
+func (a *App) SetCmdList(description string) bool {
 
-	for index, cmdList := range a.CmdList {
+	for _, cmdList := range a.CmdList {
 		if cmdList.Description == description {
-			cmdListIndex = index
-			break
+			a.currentCmdList = cmdList
+			a.currentCmdListIndex = 0
+			return true
 		}
 	}
-	return cmdListIndex
+	return false
 }
 
-// Run runs a cmdList with a matching description
-func (a *App) Run(description string) {
-
-	cmdListIndex := a.getCmdListIndex(description)
-
-	if cmdListIndex > -1 {
-		cmds := a.CmdList[cmdListIndex].Cmds
-
-		for index := range cmds {
-			cmds[index].Run()
-		}
+// HasNextCmd returns true if there is a command to run.
+func (a *App) HasNextCmd() bool {
+	if a.currentCmdListIndex < len(a.currentCmdList.Cmds) {
+		return true
 	}
+	return false
 }
 
-// Print the commands
-func (a *App) Print(description string) {
+// GetCurrentCmd returns a copy of the current command
+func (a *App) GetCurrentCmd() Command {
+	return a.currentCmdList.Cmds[a.currentCmdListIndex]
+}
 
-	cmdListIndex := a.getCmdListIndex(description)
+// RunCurrentCmd runs the current command
+func (a *App) RunCurrentCmd() {
+	a.currentCmdList.Cmds[a.currentCmdListIndex].Run()
+}
 
-	if cmdListIndex > -1 {
-		cmds := &a.CmdList[cmdListIndex].Cmds
-
-		for _, cmd := range *cmds {
-			cmd.Print()
-		}
+// PointToNextCmd moves the index to the next command (if available)
+func (a *App) PointToNextCmd() {
+	if a.currentCmdListIndex < len(a.currentCmdList.Cmds) {
+		a.currentCmdListIndex = a.currentCmdListIndex + 1
 	}
 }

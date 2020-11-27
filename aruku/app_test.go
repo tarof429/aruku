@@ -1,6 +1,7 @@
 package aruku
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -69,8 +70,31 @@ func TestReadWrite(t *testing.T) {
 		t.Fatalf("Did not find 3 commands")
 	}
 
-	a.Run("Install")
-	a.Print("Install")
+	fmt.Println("Doing install")
+	a.SetCmdList("Install")
+	for a.HasNextCmd() {
+		cmd := a.GetCurrentCmd()
+		fmt.Printf("Printing command: %v\n", cmd)
+
+		a.RunCurrentCmd()
+		cmd = a.GetCurrentCmd()
+
+		fmt.Printf("Result: %v\n", cmd)
+		a.PointToNextCmd()
+	}
+
+	fmt.Println("Doing upgrade")
+	a.SetCmdList("Upgrade")
+	for a.HasNextCmd() {
+		cmd := a.GetCurrentCmd()
+		fmt.Printf("Printing command: %v\n", cmd)
+
+		a.RunCurrentCmd()
+		cmd = a.GetCurrentCmd()
+
+		fmt.Printf("Result: %v\n", cmd)
+		a.PointToNextCmd()
+	}
 
 }
 
