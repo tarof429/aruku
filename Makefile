@@ -1,6 +1,6 @@
 # A Self-Documenting Makefile: http://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
 
-.PHONY: all build help
+.PHONY: all build help test
 
 all: build ## Build all targets
 
@@ -9,7 +9,7 @@ help: ## Display this help
 
 
 build: ## Build all targets
-	go build -o aruku main.go
+	go build -o aruku-bin
 
 test: ## Run all tests
 	go test -v ./...

@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-func TestReadWrite(t *testing.T) {
+func TestRun(t *testing.T) {
 
 	createTestFootprint()
 
@@ -17,46 +17,30 @@ func TestReadWrite(t *testing.T) {
 	a.Author = "Taro Fukunaga"
 	a.Description = "Install myapp"
 
-	addCmdList := func(description string) {
-		var cmds CmdList
+	// Install
+	var cmds CmdList
+	cmds.Description = "Install"
 
-		cmds.Description = description
+	cmd := Command{
+		Name:             "docker",
+		Args:             []string{"images"},
+		Description:      "Show docker images",
+		WorkingDirectory: getTestDataDir()}
+	cmds.Cmds = append(cmds.Cmds, cmd)
 
-		for i := 0; i < 3; i++ {
-			cmd := Command{
-				Name:             "ls",
-				Args:             []string{"-l", "."},
-				Description:      "Simple command " + strconv.Itoa(i),
-				WorkingDirectory: "testdata",
-			}
-			cmds.Cmds = append(cmds.Cmds, cmd)
-		}
-		a.CmdList = append(a.CmdList, cmds)
-	}
+	cmd = Command{
 
-	addCmdList("Install")
-	addCmdList("Uninstall")
-	addCmdList("Upgrade")
+		Name:             "python",
+		Args:             []string{"test.py"},
+		Description:      "Print platform",
+		WorkingDirectory: getTestDataDir()}
+	cmds.Cmds = append(cmds.Cmds, cmd)
 
-	err := a.Write("testdata/data")
+	a.CmdList = append(a.CmdList, cmds)
 
-	if err != nil {
-		t.Fatalf("Unable to write data")
-	}
+	a.Write("testdata")
 
-	err = a.Read("testdata/data")
-
-	if err != nil {
-		t.Fatalf("Unable to read data")
-	}
-
-	if len(a.CmdList) != 3 {
-		t.Fatalf("Did not read commmands successfully")
-	}
-
-	a.Export("testdata", "export/test.zip")
-
-	a.Import("export/test.zip", "import")
+	writeTestPythonScript("testdata/test.py")
 
 	if a.Author != "Taro Fukunaga" {
 		t.Fatalf("Invalid author")
@@ -66,36 +50,57 @@ func TestReadWrite(t *testing.T) {
 		t.Fatalf("Invalid description")
 	}
 
-	if len(a.CmdList) != 3 {
-		t.Fatalf("Did not find 3 commands")
+	if len(a.CmdList) != 1 {
+		t.Fatalf("Did not find 1 command list")
 	}
 
 	fmt.Println("Doing install")
 	a.SetCmdList("Install")
 	for a.HasNextCmd() {
 		cmd := a.GetCurrentCmd()
-		fmt.Printf("Printing command: %v\n", cmd)
+		cmd.Print()
 
 		a.RunCurrentCmd()
 		cmd = a.GetCurrentCmd()
 
-		fmt.Printf("Result: %v\n", cmd)
+		fmt.Printf("Result:\n%v\n", cmd.GetOutput())
 		a.PointToNextCmd()
 	}
 
-	fmt.Println("Doing upgrade")
-	a.SetCmdList("Upgrade")
-	for a.HasNextCmd() {
-		cmd := a.GetCurrentCmd()
-		fmt.Printf("Printing command: %v\n", cmd)
+}
 
-		a.RunCurrentCmd()
-		cmd = a.GetCurrentCmd()
+func getTestDataDir() string {
+	wd, err := os.Getwd()
 
-		fmt.Printf("Result: %v\n", cmd)
-		a.PointToNextCmd()
+	if err != nil {
+		log.Println(err)
+	}
+	return filepath.Join(wd, "testdata")
+}
+
+func writeTestPythonScript(path string) {
+
+	fmt.Println("Writing script to file")
+
+	f, err := os.Create(path)
+
+	if err != nil {
+		log.Fatalf("Unable to create test script")
 	}
 
+	defer f.Close()
+
+	script := `#!/usr/bin/python
+import platform
+p = platform.platform()
+print(p)`
+	n, err := f.WriteString(script)
+
+	if err != nil {
+		log.Fatalf("Unable to write string")
+	}
+
+	fmt.Printf("Wrote :%v bytes\n", strconv.Itoa(n))
 }
 
 func createTestFootprint() {

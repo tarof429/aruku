@@ -5,17 +5,26 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
+	"strings"
 
-	"github.com/mholt/archiver"
+	"github.com/pterm/pterm"
 )
+
+const (
+	tmpDir = "/tmp/aruku"
+)
+
+var errorKeywords = []string{"usage", "inactive", "disabled", "dead", "error", "fail"}
 
 // App represents this application
 type App struct {
-	Author              string
-	Description         string
-	CmdList             []CmdList
-	currentCmdList      CmdList
-	currentCmdListIndex int
+	Author               string
+	Description          string
+	CmdList              []CmdList
+	currentCmdList       CmdList
+	currentCmdListIndex  int
+	previousCmdListIndex int
 }
 
 // CmdList is a list of commands
@@ -46,37 +55,27 @@ func (a *App) Read(path string) error {
 // Write creates the data file
 func (a *App) Write(path string) error {
 
+	fmt.Printf("Creating: %v\n", path)
+	os.MkdirAll(path, os.FileMode(0755))
+
 	mode := int(0644)
 
 	updatedData, _ := json.MarshalIndent(a, "", "\t")
 
-	err := ioutil.WriteFile(path, updatedData, os.FileMode(mode))
+	err := ioutil.WriteFile(filepath.Join(path, "data"), updatedData, os.FileMode(mode))
 
 	return err
 }
 
-// Import unzips file containing list of commands and any scripts
-// and reads the list of commands
-func (a *App) Import(path, destination string) error {
-	err := archiver.Unarchive(path, destination)
+// Load loads data from path
+func (a *App) Load(path string) error {
 
-	if err != nil {
-		return err
-	}
-
-	err = a.Read(destination)
+	err := a.Read(filepath.Join(path, "data"))
 
 	if err != nil {
 		return err
 	}
 	return nil
-}
-
-// Export basically zips up the file containing the list of commands
-// and any scripts
-func (a *App) Export(path string, archiveName string) error {
-
-	return archiver.Archive([]string{path}, archiveName)
 }
 
 // SetCmdList sets which CmdList we want to run based on the description.
@@ -101,6 +100,19 @@ func (a *App) HasNextCmd() bool {
 	return false
 }
 
+// HasPreviousCmd returns true if there were previous commands
+func (a *App) HasPreviousCmd() bool {
+	if a.currentCmdListIndex == 0 {
+		return false
+	}
+	return true
+}
+
+// TotalCmds returns the total number of commands
+func (a *App) TotalCmds() int {
+	return len(a.currentCmdList.Cmds)
+}
+
 // GetCurrentCmd returns a copy of the current command
 func (a *App) GetCurrentCmd() Command {
 	return a.currentCmdList.Cmds[a.currentCmdListIndex]
@@ -111,9 +123,53 @@ func (a *App) RunCurrentCmd() {
 	a.currentCmdList.Cmds[a.currentCmdListIndex].Run()
 }
 
+// RunPreviousCmd runs the current command
+func (a *App) RunPreviousCmd() {
+	a.currentCmdList.Cmds[a.previousCmdListIndex].Run()
+}
+
+// PointToPreviousCmd moves currentCmdListIndex to the previous location
+func (a *App) PointToPreviousCmd() {
+	if a.currentCmdListIndex-1 >= 0 {
+		a.currentCmdListIndex = a.currentCmdListIndex - 1
+	}
+}
+
 // PointToNextCmd moves the index to the next command (if available)
 func (a *App) PointToNextCmd() {
 	if a.currentCmdListIndex < len(a.currentCmdList.Cmds) {
 		a.currentCmdListIndex = a.currentCmdListIndex + 1
 	}
+}
+
+// Run runs the current command
+func (a *App) Run() {
+	a.RunCurrentCmd()
+}
+
+// ShowCurrentCommandOutput shows the command output
+func (a *App) ShowCurrentCommandOutput() {
+	cmd := a.GetCurrentCmd()
+
+	pterm.Println()
+
+	output := cmd.GetOutput()
+	lowerOutput := strings.ToLower(output)
+
+	errorFlag := false
+
+	for _, keyword := range errorKeywords {
+		index := strings.Index(lowerOutput, keyword)
+		if index >= 0 {
+			errorFlag = true
+			break
+		}
+	}
+
+	if errorFlag {
+		pterm.Println(pterm.LightRed(output))
+	} else {
+		pterm.Println(output)
+	}
+
 }
