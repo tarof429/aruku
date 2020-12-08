@@ -9,7 +9,11 @@ help: ## Display this help
 
 
 build: ## Build all targets
-	go build -o aruku-bin
+	env GOOS=linux GOOARCH=amd64 go build -o aruku-bin-amd64
+	env GOOS=darwin GOOARCH=amd64 go build -o aruku-bin-darwix64
 
 test: ## Run all tests
 	go test -v ./...
+
+clean:
+	@rm -f aruku-bin-amd64 aruku-bin-darwin64
