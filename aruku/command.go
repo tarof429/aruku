@@ -9,7 +9,6 @@ import (
 type Command struct {
 	Name             string   `json:"name"`
 	Args             []string `json:"args"`
-	Script           string   `json:"script"`
 	WorkingDirectory string   `json:"workingDirectory"`
 	Description      string   `json:"description"`
 	exitStatus       int
