@@ -31,16 +31,11 @@ import (
 // loadCmd represents the load command
 var loadCmd = &cobra.Command{
 	Use:   "load",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "Load directory",
+	Long:  `Load a directory that contains commands and any scripts`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 1 {
-			fmt.Println("Usage: aruku-bin <cmdset file>")
+			fmt.Println("Usage: aruku-bin load <cmdset directory>")
 			os.Exit(1)
 		}
 
@@ -87,7 +82,11 @@ to quickly create a Cobra application.`,
 
 		for i := 0; a.HasNextCmd(); {
 
-			fmt.Printf("\nCommand: %v\n\n", a.GetCurrentCmd().Description)
+			if a.GetCurrentCmd().CommandType == aruku.ExecuteCommandType {
+				fmt.Printf("\nCommand: %v\n\n", a.GetCurrentCmd().Description)
+			} else {
+				fmt.Printf("\nPrompt: %v\n\n", a.GetCurrentCmd().Description)
+			}
 
 			time.Sleep((time.Millisecond * 500))
 

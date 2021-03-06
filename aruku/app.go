@@ -25,6 +25,13 @@ type App struct {
 	currentCmdList       CmdList
 	currentCmdListIndex  int
 	previousCmdListIndex int
+	variableMapChan      chan VariableMap
+	variables            []VariableMap
+}
+
+type VariableMap struct {
+	key   string
+	value string
 }
 
 // CmdList is a list of commands
@@ -85,6 +92,15 @@ func (a *App) SetCmdList(description string) bool {
 	for _, cmdList := range a.CmdList {
 		if cmdList.Description == description {
 			a.currentCmdList = cmdList
+			a.variableMapChan = make(chan VariableMap)
+
+			go func() {
+				for readVariable := range a.variableMapChan {
+					a.variables = append(a.variables, readVariable)
+				}
+
+			}()
+
 			a.currentCmdListIndex = 0
 			return true
 		}
@@ -120,12 +136,12 @@ func (a *App) GetCurrentCmd() Command {
 
 // RunCurrentCmd runs the current command
 func (a *App) RunCurrentCmd() {
-	a.currentCmdList.Cmds[a.currentCmdListIndex].Run()
+	a.currentCmdList.Cmds[a.currentCmdListIndex].Run(a.variableMapChan, a.variables)
 }
 
 // RunPreviousCmd runs the current command
 func (a *App) RunPreviousCmd() {
-	a.currentCmdList.Cmds[a.previousCmdListIndex].Run()
+	a.currentCmdList.Cmds[a.previousCmdListIndex].Run(a.variableMapChan, a.variables)
 }
 
 // PointToPreviousCmd moves currentCmdListIndex to the previous location

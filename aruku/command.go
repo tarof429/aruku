@@ -1,8 +1,18 @@
 package aruku
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"os/exec"
+	"strings"
+)
+
+type CommandType string
+
+const (
+	ExecuteCommandType CommandType = "execute"
+	ReadCommandType    CommandType = "read"
 )
 
 // Command represents a script, it's description, and status
@@ -13,22 +23,58 @@ type Command struct {
 	Description      string   `json:"description"`
 	exitStatus       int
 	output           string
+	CommandType      `json:"type"`
+	VariableName     string `json:"variable"`
+	//variables        []VariableMap
 }
 
 // Run runs the command
-func (c *Command) Run() {
+func (c *Command) Run(vars chan VariableMap, variables []VariableMap) {
 
-	cmd := exec.Command(c.Name, c.Args...)
-	cmd.Dir = c.WorkingDirectory
-	combinedOutput, combinedOutputErr := cmd.CombinedOutput()
+	if c.CommandType == ReadCommandType {
+		reader := bufio.NewReader(os.Stdin)
 
-	if combinedOutputErr != nil {
-		c.exitStatus = -1
+		input, _ := reader.ReadString('\n')
+
+		go func() {
+			vars <- VariableMap{c.VariableName, strings.TrimSuffix(input, "\n")}
+		}()
+
 	} else {
-		c.exitStatus = 0
-	}
+		var replacedArgs []string
 
-	c.output = string(combinedOutput)
+		// for _, variable := range variables {
+		// 	fmt.Printf("Variable: %v: %v\n", variable.key, variable.value)
+		// }
+
+		for _, arg := range c.Args {
+			//fmt.Printf("Evaluating %v\n", arg)
+			if strings.HasPrefix(arg, "$") {
+				//fmt.Println("It's a variable")
+				for _, variable := range variables {
+					//fmt.Printf("Checking if %v == %v\n", variable.key, arg[1:])
+					if variable.key == arg[1:] {
+						replacedArgs = append(replacedArgs, variable.value)
+						break
+					}
+				}
+			} else {
+				replacedArgs = append(replacedArgs, arg)
+			}
+		}
+		//fmt.Printf("Replaced args: %v\n", replacedArgs)
+		cmd := exec.Command(c.Name, replacedArgs...)
+		cmd.Dir = c.WorkingDirectory
+		combinedOutput, combinedOutputErr := cmd.CombinedOutput()
+
+		if combinedOutputErr != nil {
+			c.exitStatus = -1
+		} else {
+			c.exitStatus = 0
+		}
+
+		c.output = string(combinedOutput)
+	}
 
 }
 

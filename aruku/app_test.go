@@ -22,18 +22,28 @@ func TestRun(t *testing.T) {
 	cmds.Description = "Install"
 
 	cmd := Command{
-		Name:             "docker",
-		Args:             []string{"images"},
-		Description:      "Show docker images",
+		Name:             "w",
+		CommandType:      executeCommandType,
+		Args:             []string{"-h"},
+		Description:      "Show who's logged in",
 		WorkingDirectory: getTestDataDir()}
 	cmds.Cmds = append(cmds.Cmds, cmd)
 
 	cmd = Command{
 
 		Name:             "python",
+		CommandType:      executeCommandType,
 		Args:             []string{"test.py"},
 		Description:      "Print platform",
 		WorkingDirectory: getTestDataDir()}
+	cmds.Cmds = append(cmds.Cmds, cmd)
+
+	cmd = Command{
+		Name:         "docker username",
+		CommandType:  readCommandType,
+		Description:  "Enter docker username",
+		VariableName: "DOCKER_USERNAME",
+	}
 	cmds.Cmds = append(cmds.Cmds, cmd)
 
 	a.CmdList = append(a.CmdList, cmds)
