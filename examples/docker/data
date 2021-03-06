@@ -1,0 +1,34 @@
+{
+	"Author": "Taro Fukunaga",
+	"Description": "Install docker",
+	"CmdList": [
+		{
+			"Description": "Login to hub.docker.com",
+			"Commands": [
+				{
+					"name": "docker username",
+					"args": null,
+					"workingDirectory": "",
+					"description": "Enter docker username",
+					"type": "read",
+					"variable": "DOCKER_USERNAME"
+				},
+								{
+					"name": "docker password",
+					"args": null,
+					"workingDirectory": "",
+					"description": "Enter docker password",
+					"type": "read",
+					"variable": "DOCKER_PASSWORD"
+				},
+				{
+					"name": "echo",
+					"description": "Will run login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD",
+					"args": ["login", "-u", "$DOCKER_USERNAME", "-p", "$DOCKER_PASSWORD"],
+					"workingDirectory": "",
+					"type": "execute"
+				}
+			]
+		}
+	]
+}
