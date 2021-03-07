@@ -3,7 +3,7 @@
 	"Description": "Install docker",
 	"CmdList": [
 		{
-			"Description": "Login to hub.docker.com",
+			"Description": "Login to https://hub.docker.com/",
 			"Commands": [
 				{
 					"name": "docker username",
