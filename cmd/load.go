@@ -21,6 +21,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/briandowns/spinner"
 	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 	"github.com/tarof429/aruku/aruku"
@@ -105,8 +106,15 @@ var loadCmd = &cobra.Command{
 
 				switch result {
 				case "Run":
+
 					time.Sleep((time.Millisecond * 100))
+					s := spinner.New(spinner.CharSets[9], 100*time.Millisecond)
+					s.Start()
+
+					// Run command
 					a.Run()
+
+					s.Stop()
 					a.ShowCurrentCommandOutput()
 					a.PointToNextCmd()
 				case "Back":

@@ -1,0 +1,25 @@
+{
+	"Author": "Taro Fukunaga",
+	"Description": "Run simple commands",
+	"CmdList": [
+		{
+			"Description": "List files",
+			"Commands": [
+				{
+					"name": "ls",
+					"args": null,
+					"workingDirectory": ".",
+					"description": "List files",
+					"type": "execute"
+				},
+				{
+					"name": "sleep",
+					"args": ["3"],
+					"workingDirectory": ".",
+					"description": "Sleep 3 seconds",
+					"type": "execute"
+				}
+			]
+		}
+	]
+}

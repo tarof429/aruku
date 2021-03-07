@@ -63,6 +63,10 @@ func TestLoad(t *testing.T) {
 		t.Fail()
 	}
 
+	a.SetCmdList("Install")
+
+	a.Run()
+
 	copyTestFile(path.Join(getTestDataDir(), "aruku.yaml"), path.Join(getTestDataDir(), "aruku-bak.yaml"))
 }
 

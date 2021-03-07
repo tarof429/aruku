@@ -3,6 +3,7 @@ module github.com/tarof429/aruku
 go 1.15
 
 require (
+	github.com/briandowns/spinner v1.12.0 // indirect
 	github.com/dsnet/compress v0.0.1 // indirect
 	github.com/frankban/quicktest v1.11.2 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
