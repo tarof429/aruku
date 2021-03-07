@@ -78,7 +78,7 @@ var loadCmd = &cobra.Command{
 		for a.HasNextCmd() {
 
 			if a.GetCurrentCmd().CommandType == aruku.ExecuteCommandType {
-				fmt.Printf("\nCommand: %v\n\n", a.GetCurrentCmd().Description)
+				fmt.Printf("\nTask: %v\n\n", a.GetCurrentCmd().Description)
 
 				time.Sleep((time.Millisecond * 100))
 

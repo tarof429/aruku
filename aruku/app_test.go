@@ -2,14 +2,20 @@ package aruku
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
+	"path"
 	"path/filepath"
 	"strconv"
 	"testing"
 )
 
-func TestRun(t *testing.T) {
+const (
+	testDataDir = "testdata"
+)
+
+func TestLoad(t *testing.T) {
 
 	createTestFootprint()
 
@@ -48,35 +54,58 @@ func TestRun(t *testing.T) {
 
 	a.CmdList = append(a.CmdList, cmds)
 
-	a.Write("testdata")
+	a.Write(getTestDataDir())
 
-	writeTestPythonScript("testdata/test.py")
+	err := a.Load(getTestDataDir())
 
-	if a.Author != "Taro Fukunaga" {
-		t.Fatalf("Invalid author")
+	if err != nil {
+		fmt.Println(err)
+		t.Fail()
 	}
 
-	if a.Description != "Install myapp" {
-		t.Fatalf("Invalid description")
+	copyTestFile(path.Join(getTestDataDir(), "aruku.yaml"), path.Join(getTestDataDir(), "aruku-bak.yaml"))
+}
+
+func TestLoadEmptyCmdList(t *testing.T) {
+	script := `
+	{
+		"Author": "Taro Fukunaga",
+		"Description": "Install myapp",
+		"CmdList": []
+	}
+	`
+
+	writeTestFile(path.Join(testDataDir, "aruku.yaml"), script)
+
+	var a App
+
+	err := a.Load(getTestDataDir())
+
+	if err != nil {
+		fmt.Println(err)
+		t.Fail()
 	}
 
-	if len(a.CmdList) != 1 {
-		t.Fatalf("Did not find 1 command list")
+}
+
+func TestLoadInvalidYaml(t *testing.T) {
+	script := `
+	{
+		"Author", "Taro Fukunaga",
+		"Description", "Install myapp",
+		"CmdList", []
 	}
+	`
 
-	fmt.Println("Doing install")
-	a.SetCmdList("Install")
-	for a.HasNextCmd() {
-		cmd := a.GetCurrentCmd()
-		cmd.Print()
+	writeTestFile(path.Join(testDataDir, "aruku.yaml"), script)
 
-		a.RunCurrentCmd()
-		cmd = a.GetCurrentCmd()
+	var a App
 
-		fmt.Printf("Result:\n%v\n", cmd.GetOutput())
-		a.PointToNextCmd()
+	err := a.Load(getTestDataDir())
+
+	if err != nil {
+		fmt.Println(err)
 	}
-
 }
 
 func getTestDataDir() string {
@@ -88,23 +117,30 @@ func getTestDataDir() string {
 	return filepath.Join(wd, "testdata")
 }
 
-func writeTestPythonScript(path string) {
+func copyTestFile(src, dest string) int64 {
+	inFile, _ := os.Open(src)
 
-	fmt.Println("Writing script to file")
+	defer inFile.Close()
+
+	outFile, _ := os.Create(dest)
+
+	defer outFile.Close()
+
+	nBytes, _ := io.Copy(outFile, inFile)
+
+	return nBytes
+}
+
+func writeTestFile(path, script string) {
 
 	f, err := os.Create(path)
 
 	if err != nil {
-		log.Fatalf("Unable to create test script")
+		log.Fatalf("Unable to write file")
 	}
 
 	defer f.Close()
 
-	script := `#!/usr/bin/python
-
-import platform
-p = platform.platform()
-print(p)`
 	n, err := f.WriteString(script)
 
 	if err != nil {
