@@ -76,51 +76,41 @@ var loadCmd = &cobra.Command{
 
 		a.SetCmdList(result)
 
-		for a.HasNextCmd() {
+		for a.HasCmd() {
 
 			if a.GetCurrentCmd().CommandType == aruku.ExecuteCommandType {
 				fmt.Printf("\nTask: %v\n\n", a.GetCurrentCmd().Description)
 
 				time.Sleep((time.Millisecond * 100))
 
+				time.Sleep((time.Millisecond * 100))
+				s := spinner.New(spinner.CharSets[9], 100*time.Millisecond)
+				s.Start()
+
+				// Run command
+				a.Run()
+
+				s.Stop()
+				a.ShowCurrentCommandOutput()
+				//a.PointToNextCmd()
+
 				var prompt promptui.Select
 
-				if a.HasNextCmd() && a.HasPreviousCmd() {
+				if a.HasNextCmd() {
 					prompt = promptui.Select{
 						Label: "Select Command",
-						Items: []string{"Run", "Back", "Next", "Exit"},
-					}
-				} else if a.HasNextCmd() {
-					prompt = promptui.Select{
-						Label: "Select Command",
-						Items: []string{"Run", "Next", "Exit"},
+						Items: []string{"Next", "Exit"},
 					}
 				} else {
 					prompt = promptui.Select{
 						Label: "Select Command",
-						Items: []string{"Run", "Back", "Exit"},
+						Items: []string{"Exit"},
 					}
 				}
 
 				_, result, err := prompt.Run()
 
 				switch result {
-				case "Run":
-
-					time.Sleep((time.Millisecond * 100))
-					s := spinner.New(spinner.CharSets[9], 100*time.Millisecond)
-					s.Start()
-
-					// Run command
-					a.Run()
-
-					s.Stop()
-					a.ShowCurrentCommandOutput()
-					a.PointToNextCmd()
-				case "Back":
-					time.Sleep((time.Millisecond * 100))
-					a.PointToPreviousCmd()
-					continue
 				case "Next":
 					a.PointToNextCmd()
 					continue
@@ -145,27 +135,6 @@ var loadCmd = &cobra.Command{
 
 			time.Sleep((time.Millisecond * 100))
 
-			if a.HasNextCmd() == false {
-				prompt = promptui.Select{
-					Label: "Select Command",
-					Items: []string{"Back", "Exit"},
-				}
-				_, result, err := prompt.Run()
-
-				switch result {
-				case "Back":
-					time.Sleep((time.Millisecond * 100))
-					a.PointToPreviousCmd()
-					continue
-				case "Exit":
-					fmt.Println("Exit")
-					os.Exit(0)
-				}
-				if err != nil {
-					fmt.Printf("Prompt failed %v\n", err)
-					return
-				}
-			}
 		}
 	},
 }

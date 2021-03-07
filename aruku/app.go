@@ -109,20 +109,17 @@ func (a *App) SetCmdList(description string) bool {
 	return false
 }
 
+// HasCmd returns true if the index is less than the length of the command list
+func (a *App) HasCmd() bool {
+	return a.currentCmdListIndex < len(a.currentCmdList.Cmds)
+}
+
 // HasNextCmd returns true if there is a command to run.
 func (a *App) HasNextCmd() bool {
 	if a.currentCmdListIndex < len(a.currentCmdList.Cmds) {
 		return true
 	}
 	return false
-}
-
-// HasPreviousCmd returns true if there were previous commands
-func (a *App) HasPreviousCmd() bool {
-	if a.currentCmdListIndex == 0 {
-		return false
-	}
-	return true
 }
 
 // TotalCmds returns the total number of commands
