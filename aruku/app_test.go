@@ -101,6 +101,7 @@ func writeTestPythonScript(path string) {
 	defer f.Close()
 
 	script := `#!/usr/bin/python
+
 import platform
 p = platform.platform()
 print(p)`

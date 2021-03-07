@@ -12,7 +12,8 @@ import (
 )
 
 const (
-	tmpDir = "/tmp/aruku"
+	tmpDir        = "/tmp/aruku"
+	arukuDataFile = "aruku.yaml"
 )
 
 var errorKeywords = []string{"usage", "inactive", "disabled", "dead", "error", "fail"}
@@ -69,7 +70,7 @@ func (a *App) Write(path string) error {
 
 	updatedData, _ := json.MarshalIndent(a, "", "\t")
 
-	err := ioutil.WriteFile(filepath.Join(path, "data"), updatedData, os.FileMode(mode))
+	err := ioutil.WriteFile(filepath.Join(path, arukuDataFile), updatedData, os.FileMode(mode))
 
 	return err
 }
@@ -77,7 +78,7 @@ func (a *App) Write(path string) error {
 // Load loads data from path
 func (a *App) Load(path string) error {
 
-	err := a.Read(filepath.Join(path, "data"))
+	err := a.Read(filepath.Join(path, arukuDataFile))
 
 	if err != nil {
 		return err
