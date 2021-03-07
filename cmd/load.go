@@ -18,12 +18,10 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/manifoldco/promptui"
-	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 	"github.com/tarof429/aruku/aruku"
 )
@@ -55,7 +53,6 @@ var loadCmd = &cobra.Command{
 
 		for _, list := range a.CmdList {
 			promptItems = append(promptItems, list.Description)
-			//fmt.Printf("Adding: %v\n", list.Description)
 		}
 
 		promptItems = append(promptItems, "Exit")
@@ -78,69 +75,67 @@ var loadCmd = &cobra.Command{
 
 		a.SetCmdList(result)
 
-		total := a.TotalCmds()
-
-		for i := 0; a.HasNextCmd(); {
+		for a.HasNextCmd() {
 
 			if a.GetCurrentCmd().CommandType == aruku.ExecuteCommandType {
 				fmt.Printf("\nCommand: %v\n\n", a.GetCurrentCmd().Description)
+
+				time.Sleep((time.Millisecond * 100))
+
+				var prompt promptui.Select
+
+				if a.HasNextCmd() && a.HasPreviousCmd() {
+					prompt = promptui.Select{
+						Label: "Select Command",
+						Items: []string{"Run", "Back", "Next", "Exit"},
+					}
+				} else if a.HasNextCmd() {
+					prompt = promptui.Select{
+						Label: "Select Command",
+						Items: []string{"Run", "Next", "Exit"},
+					}
+				} else {
+					prompt = promptui.Select{
+						Label: "Select Command",
+						Items: []string{"Run", "Back", "Exit"},
+					}
+				}
+
+				_, result, err := prompt.Run()
+
+				switch result {
+				case "Run":
+					time.Sleep((time.Millisecond * 100))
+					a.Run()
+					a.ShowCurrentCommandOutput()
+					a.PointToNextCmd()
+				case "Back":
+					time.Sleep((time.Millisecond * 100))
+					a.PointToPreviousCmd()
+					continue
+				case "Next":
+					a.PointToNextCmd()
+					continue
+				case "Exit":
+					fmt.Println("Exit")
+					os.Exit(0)
+				}
+
+				if err != nil {
+					fmt.Printf("Prompt failed %v\n", err)
+					return
+				}
 			} else {
-				fmt.Printf("\nPrompt: %v\n\n", a.GetCurrentCmd().Description)
-			}
+				done := false
 
-			time.Sleep((time.Millisecond * 500))
-
-			var prompt promptui.Select
-
-			if a.HasNextCmd() && a.HasPreviousCmd() {
-				prompt = promptui.Select{
-					Label: "Select Command",
-					Items: []string{"Run", "Back", "Next", "Exit"},
+				for done == false {
+					fmt.Printf("%v: ", a.GetCurrentCmd().Description)
+					done = a.Run()
 				}
-			} else if a.HasNextCmd() {
-				prompt = promptui.Select{
-					Label: "Select Command",
-					Items: []string{"Run", "Next", "Exit"},
-				}
-			} else {
-				prompt = promptui.Select{
-					Label: "Select Command",
-					Items: []string{"Run", "Back", "Exit"},
-				}
-			}
-
-			_, result, err := prompt.Run()
-
-			switch result {
-			case "Run":
-				time.Sleep((time.Millisecond * 500))
-				a.Run()
-				a.ShowCurrentCommandOutput()
 				a.PointToNextCmd()
-				i = i + 1
-			case "Back":
-				time.Sleep((time.Millisecond * 500))
-				i = i - 1
-				a.PointToPreviousCmd()
-				continue
-			case "Next":
-				i = i + 1
-				a.PointToNextCmd()
-				continue
-			case "Exit":
-				fmt.Println("Exit")
-				os.Exit(0)
 			}
 
-			if err != nil {
-				fmt.Printf("Prompt failed %v\n", err)
-				return
-			}
-
-			footer := "\nShowing " + strconv.Itoa(i) + "/" + strconv.Itoa(total) + " commands\n"
-			pterm.DefaultCenter.Println(footer)
-
-			time.Sleep((time.Millisecond * 500))
+			time.Sleep((time.Millisecond * 100))
 
 			if a.HasNextCmd() == false {
 				prompt = promptui.Select{
@@ -151,8 +146,7 @@ var loadCmd = &cobra.Command{
 
 				switch result {
 				case "Back":
-					time.Sleep((time.Millisecond * 500))
-					i = i - 1
+					time.Sleep((time.Millisecond * 100))
 					a.PointToPreviousCmd()
 					continue
 				case "Exit":

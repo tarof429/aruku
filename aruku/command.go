@@ -25,34 +25,34 @@ type Command struct {
 	output           string
 	CommandType      `json:"type"`
 	VariableName     string `json:"variable"`
-	//variables        []VariableMap
 }
 
 // Run runs the command
-func (c *Command) Run(vars chan VariableMap, variables []VariableMap) {
+func (c *Command) Run(vars chan VariableMap, variables []VariableMap) bool {
 
 	if c.CommandType == ReadCommandType {
 		reader := bufio.NewReader(os.Stdin)
 
-		input, _ := reader.ReadString('\n')
+		var input string
+
+		input, _ = reader.ReadString('\n')
+		input = strings.TrimSpace(input)
+
+		if len(input) == 0 {
+			return false
+		}
 
 		go func() {
 			vars <- VariableMap{c.VariableName, strings.TrimSuffix(input, "\n")}
 		}()
+		return true
 
 	} else {
 		var replacedArgs []string
 
-		// for _, variable := range variables {
-		// 	fmt.Printf("Variable: %v: %v\n", variable.key, variable.value)
-		// }
-
 		for _, arg := range c.Args {
-			//fmt.Printf("Evaluating %v\n", arg)
 			if strings.HasPrefix(arg, "$") {
-				//fmt.Println("It's a variable")
 				for _, variable := range variables {
-					//fmt.Printf("Checking if %v == %v\n", variable.key, arg[1:])
 					if variable.key == arg[1:] {
 						replacedArgs = append(replacedArgs, variable.value)
 						break
@@ -62,7 +62,7 @@ func (c *Command) Run(vars chan VariableMap, variables []VariableMap) {
 				replacedArgs = append(replacedArgs, arg)
 			}
 		}
-		//fmt.Printf("Replaced args: %v\n", replacedArgs)
+
 		cmd := exec.Command(c.Name, replacedArgs...)
 		cmd.Dir = c.WorkingDirectory
 		combinedOutput, combinedOutputErr := cmd.CombinedOutput()
@@ -74,6 +74,7 @@ func (c *Command) Run(vars chan VariableMap, variables []VariableMap) {
 		}
 
 		c.output = string(combinedOutput)
+		return c.exitStatus == 0
 	}
 
 }

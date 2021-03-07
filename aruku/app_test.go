@@ -23,7 +23,7 @@ func TestRun(t *testing.T) {
 
 	cmd := Command{
 		Name:             "w",
-		CommandType:      executeCommandType,
+		CommandType:      ExecuteCommandType,
 		Args:             []string{"-h"},
 		Description:      "Show who's logged in",
 		WorkingDirectory: getTestDataDir()}
@@ -32,7 +32,7 @@ func TestRun(t *testing.T) {
 	cmd = Command{
 
 		Name:             "python",
-		CommandType:      executeCommandType,
+		CommandType:      ExecuteCommandType,
 		Args:             []string{"test.py"},
 		Description:      "Print platform",
 		WorkingDirectory: getTestDataDir()}
@@ -40,7 +40,7 @@ func TestRun(t *testing.T) {
 
 	cmd = Command{
 		Name:         "docker username",
-		CommandType:  readCommandType,
+		CommandType:  ReadCommandType,
 		Description:  "Enter docker username",
 		VariableName: "DOCKER_USERNAME",
 	}

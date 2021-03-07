@@ -23,7 +23,7 @@
 				},
 				{
 					"name": "echo",
-					"description": "Will run login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD",
+					"description": "Logging into hub.docker.com",
 					"args": ["login", "-u", "$DOCKER_USERNAME", "-p", "$DOCKER_PASSWORD"],
 					"workingDirectory": "",
 					"type": "execute"

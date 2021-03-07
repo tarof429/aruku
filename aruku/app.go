@@ -135,13 +135,13 @@ func (a *App) GetCurrentCmd() Command {
 }
 
 // RunCurrentCmd runs the current command
-func (a *App) RunCurrentCmd() {
-	a.currentCmdList.Cmds[a.currentCmdListIndex].Run(a.variableMapChan, a.variables)
+func (a *App) RunCurrentCmd() bool {
+	return a.currentCmdList.Cmds[a.currentCmdListIndex].Run(a.variableMapChan, a.variables)
 }
 
 // RunPreviousCmd runs the current command
-func (a *App) RunPreviousCmd() {
-	a.currentCmdList.Cmds[a.previousCmdListIndex].Run(a.variableMapChan, a.variables)
+func (a *App) RunPreviousCmd() bool {
+	return a.currentCmdList.Cmds[a.previousCmdListIndex].Run(a.variableMapChan, a.variables)
 }
 
 // PointToPreviousCmd moves currentCmdListIndex to the previous location
@@ -159,8 +159,8 @@ func (a *App) PointToNextCmd() {
 }
 
 // Run runs the current command
-func (a *App) Run() {
-	a.RunCurrentCmd()
+func (a *App) Run() bool {
+	return a.RunCurrentCmd()
 }
 
 // ShowCurrentCommandOutput shows the command output
