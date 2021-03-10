@@ -92,24 +92,74 @@ func TestLoadEmptyCmdList(t *testing.T) {
 
 }
 
-func TestLoadInvalidYaml(t *testing.T) {
-	script := `
-	{
-		"Author", "Taro Fukunaga",
-		"Description", "Install myapp",
-		"CmdList", []
+// func TestLoadInvalidYaml(t *testing.T) {
+// 	script := `
+// 	{
+// 		"Author", "Taro Fukunaga",
+// 		"Description", "Install myapp",
+// 		"CmdList", []
+// 	}
+// 	`
+
+// 	writeTestFile(path.Join(testDataDir, "aruku.yaml"), script)
+
+// 	var a App
+
+// 	err := a.Load(getTestDataDir())
+
+// 	if err != nil {
+// 		fmt.Println(err)
+// 	}
+// }
+
+func TestLoadCmdWithManyArgs(t *testing.T) {
+
+	var variableMap []VariableMap
+	variableMap = append(variableMap, VariableMap{key: "DOCKER_USERNAME", value: "admin"})
+	variableMap = append(variableMap, VariableMap{key: "DOCKER_PASSWORD", value: "secret"})
+
+	cmd, args := ParseCommand(
+		"vagrant",
+		[]string{"ssh", "--no-tty", "kubenode01", "-c", "\"docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD\""},
+		variableMap,
+	)
+
+	fmt.Println(cmd)
+
+	fmt.Println(len(args))
+	for _, arg := range args {
+		fmt.Println(arg)
 	}
-	`
 
-	writeTestFile(path.Join(testDataDir, "aruku.yaml"), script)
+	// script := `
+	// {
+	// 	"Author": "Taro Fukunaga",
+	// 	"Description": "Install myapp",
+	// 	"CmdList": [
+	// 		{
+	// 		"Description": "Login to dockerhub",
+	// 		"Commands": [
+	// 			{
+	// 			"name": "vagrant",
+	// 			"args": ["ssh", "--no-tty", "kubenode01", "-c", "docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD"],
+	// 			"type": "execute"
+	// 			}
+	// 		]}
+	// 	]
+	// }
+	// `
 
-	var a App
+	// writeTestFile(path.Join(testDataDir, "aruku.yaml"), script)
 
-	err := a.Load(getTestDataDir())
+	// var a App
 
-	if err != nil {
-		fmt.Println(err)
-	}
+	// err := a.Load(getTestDataDir())
+
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	t.Fail()
+	// }
+
 }
 
 func getTestDataDir() string {

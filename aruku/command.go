@@ -27,56 +27,82 @@ type Command struct {
 	VariableName     string `json:"variable"`
 }
 
-// Run runs the command
-func (c *Command) Run(vars chan VariableMap, variables []VariableMap) bool {
+func (c *Command) readCommand(vars chan VariableMap) bool {
+	reader := bufio.NewReader(os.Stdin)
 
-	if c.CommandType == ReadCommandType {
-		reader := bufio.NewReader(os.Stdin)
+	var input string
 
-		var input string
+	input, _ = reader.ReadString('\n')
+	input = strings.TrimSpace(input)
 
-		input, _ = reader.ReadString('\n')
-		input = strings.TrimSpace(input)
+	if len(input) == 0 {
+		return false
+	}
 
-		if len(input) == 0 {
-			return false
-		}
+	go func() {
+		vars <- VariableMap{c.VariableName, strings.TrimSuffix(input, "\n")}
+	}()
+	return true
+}
 
-		go func() {
-			vars <- VariableMap{c.VariableName, strings.TrimSuffix(input, "\n")}
-		}()
-		return true
+func ParseCommand(cmd string, args []string, variableMap []VariableMap) (string, []string) {
 
-	} else {
-		var replacedArgs []string
+	var replacedArgs []string
 
-		for _, arg := range c.Args {
-			if strings.HasPrefix(arg, "$") {
-				for _, variable := range variables {
-					if variable.key == arg[1:] {
-						replacedArgs = append(replacedArgs, variable.value)
+	// Iterate through the array of args
+	for _, arg := range args {
+		// Split each arg by whitespace
+		miniargs := strings.Split(arg, " ")
+		var updatedArg string // the updated value of 'arg' with variables replaced
+		// iterate through each word in the arg, doing variable replacement
+		for _, miniarg := range miniargs {
+			if strings.Index(miniarg, "$") == 0 {
+				for _, vmap := range variableMap {
+					if strings.Contains(miniarg, vmap.key) {
+						updatedArg = updatedArg + " " + vmap.value
+						if miniarg[len(miniarg)-1] == '"' {
+							updatedArg = updatedArg + "\""
+						}
 						break
 					}
 				}
 			} else {
-				replacedArgs = append(replacedArgs, arg)
+				updatedArg = updatedArg + " " + miniarg
 			}
+			updatedArg = strings.Trim(updatedArg, " ")
 		}
+		// finally, append the updated arg to our list of args
+		replacedArgs = append(replacedArgs, updatedArg)
+	}
+	return cmd, replacedArgs
 
-		cmd := exec.Command(c.Name, replacedArgs...)
-		cmd.Dir = c.WorkingDirectory
-		combinedOutput, combinedOutputErr := cmd.CombinedOutput()
+}
 
-		if combinedOutputErr != nil {
-			c.exitStatus = -1
-		} else {
-			c.exitStatus = 0
-		}
+func (c *Command) execCommand(variableMap []VariableMap) bool {
 
-		c.output = string(combinedOutput)
-		return c.exitStatus == 0
+	name, replacedArgs := ParseCommand(c.Name, c.Args, variableMap)
+
+	cmd := exec.Command(name, replacedArgs...)
+	cmd.Dir = c.WorkingDirectory
+	combinedOutput, combinedOutputErr := cmd.CombinedOutput()
+
+	if combinedOutputErr != nil {
+		c.exitStatus = -1
+	} else {
+		c.exitStatus = 0
 	}
 
+	c.output = string(combinedOutput)
+	return c.exitStatus == 0
+}
+
+// Run either sets a variable or executes a command
+func (c *Command) Run(vars chan VariableMap, variableMap []VariableMap) bool {
+
+	if c.CommandType == ReadCommandType {
+		return c.readCommand(vars)
+	}
+	return c.execCommand(variableMap)
 }
 
 // Print prints the command
@@ -85,10 +111,7 @@ func (c *Command) Print() {
 	fmt.Println(c.output)
 }
 
-func (c *Command) GetExitStatus() int {
-	return c.exitStatus
-}
-
+// GetOutput returns the output from the command
 func (c *Command) GetOutput() string {
 	return c.output
 }
